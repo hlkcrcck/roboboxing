@@ -35,8 +35,8 @@ BasicGame.Game.prototype = {
 	
 	BasicGame.juicy = this.game.plugins.add(Phaser.Plugin.Juicy); //ekran sallama plugini
 	
-	this.game.add.tileSprite(0, 0, 1000, 1000, 'background');
-	this.game.world.setBounds(100, 100, 800, 800);                     
+	this.game.add.tileSprite(0, 0, 1400, 1000, 'background');
+	//this.game.world.setBounds(300, 100, 800, 800);                     
 	
 	this.game.physics.startSystem(Phaser.Physics.P2JS);  
 
@@ -57,6 +57,7 @@ BasicGame.Game.prototype = {
     BasicGame.stateText.visible = false;
 	
 	BasicGame.boxer1.create();
+	BasicGame.boxer2.create();
 
 		//  The score
     BasicGame.boxer1.scoreString = 'Score : ';
@@ -85,6 +86,7 @@ BasicGame.Game.prototype = {
   update: function () {
 
 		BasicGame.boxer1.update();
+		BasicGame.boxer2.update();
 		
   },
   

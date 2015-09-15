@@ -36,6 +36,7 @@ Boxer = function(game,p_number,startX,startY) {
 	this.p_number = p_number;
 	this.startX = startX;
 	this.startY = startY;
+	this.life = 100;
 };
 Boxer.prototype = {
  
@@ -47,69 +48,158 @@ Boxer.prototype = {
 		this.game.load.image('player_bottom_right','assets/boxer/bottomarm.png');
 		this.game.load.image('player_glove_left','assets/boxer/glove.png');
 		this.game.load.image('player_glove_right','assets/boxer/glove.png');
+		this.game.load.image('player_head','assets/boxer/head.png');
     },
  
     create: function () {
 			
 		if(this.p_number==1)
 			{this.cursors = this.game.input.keyboard.createCursorKeys();
+			this.cursors.lp = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+			this.cursors.rp = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
 			}
 		if(this.p_number==2)
 			{
 			this.cursors = {up: this.game.input.keyboard.addKey(Phaser.Keyboard.W),
 							down: this.game.input.keyboard.addKey(Phaser.Keyboard.S),
 							left: this.game.input.keyboard.addKey(Phaser.Keyboard.A),
-							right: this.game.input.keyboard.addKey(Phaser.Keyboard.D)};				
+							right: this.game.input.keyboard.addKey(Phaser.Keyboard.D),
+							lp: this.game.input.keyboard.addKey(Phaser.Keyboard.Q),
+							rp: this.game.input.keyboard.addKey(Phaser.Keyboard.E)};				
 			}
 
-		this.sprite = this.game.add.sprite(this.startX,this.startY, 'player_body');  //boksörün ana vücudu
-		this.game.physics.p2.enable(this.sprite);
-		
-		var maxForce = 20000;
-		
-		this.topleftarm = this.game.add.sprite(this.startX-60,this.startY, 'player_top_left');  //sol kol vücud bağlantısı
-		//this.game.physics.p2.enable(this.topleftarm);
-		//this.game.physics.p2.createRevoluteConstraint(this.sprite, [-10, 0], this.topleftarm, [10, 0], maxForce);
-		
-		
-		
-		this.game.camera.follow(this.sprite);                //oyuncuyu takip et
-		
-		var edge = 100;
-		this.game.camera.deadzone = new Phaser.Rectangle(edge, edge, this.game.camera.width - (edge * 2), this.game.camera.height - (edge * 2));   
-		this.sprite.body.collideWorldBounds = true;
+			
 
+			    //  Add 2 sprites which we'll join with a constraint
+    this.sprite = this.game.add.sprite(this.startX, this.startY, 'player_body');
+	this.sprite.anchor.setTo(0.5,0.5);
+	
+    this.vu1 = this.game.add.sprite(this.startX/2, this.startY, 'player_top_left');
+	this.vu1.anchor.setTo(0.5,1);
+	
+	this.vu2 = this.game.add.sprite(this.startX*1.5, this.startY*1.5, 'player_top_right');
+	this.vu2.anchor.setTo(0.5,1);
+	
+	this.vu3 = this.game.add.sprite(this.startX/3, this.startY*1.5, 'player_bottom_left');
+	this.vu3.anchor.setTo(0.5,1);
+	
+	this.vu4 = this.game.add.sprite(this.startX*1.5, this.startY*1.5, 'player_bottom_right');
+	this.vu4.anchor.setTo(0.5,1);
+	
+	this.vu5 = this.game.add.sprite(this.startX/3, this.startY*1.5, 'player_glove_left');
+	this.vu5.anchor.setTo(0.5,0.5);
+	
+	this.vu6 = this.game.add.sprite(this.startX*1.5, this.startY*1.5, 'player_glove_right');
+	this.vu6.anchor.setTo(0.5,0.5);
+	
+	this.vu7 = this.game.add.sprite(this.startX*1.5, this.startY*1.5, 'player_head');
+	this.vu7.anchor.setTo(0.5,0.5);
+	
+	this.game.physics.p2.enable([this.sprite, this.vu1,this.vu2,this.vu3,this.vu4,this.vu5,this.vu6,this.vu7]);
+	this.sprite.body.mass = 1000;
+	this.vu1.body.mass = 3;
+	this.vu2.body.mass = 3;
+	this.vu3.body.mass = 2;
+	this.vu4.body.mass = 2;
+	this.vu5.body.mass = 50;
+	this.vu6.body.mass = 50;
+	this.vu7.body.mass = 2;
+    //  Lock the two bodies together. The [0, 50] sets the distance apart (y: 80)
+	var maxForce = 500000
+    var constraint1 = this.game.physics.p2.createRevoluteConstraint(this.vu1, [0, 45],this.sprite,[-95, -20] ,maxForce);
+	constraint1.collideConnected = false;
+	constraint1.setLimits(0.1,1.2);
+	constraint1.setStiffness(500000);
+	var constraint2 = this.game.physics.p2.createRevoluteConstraint(this.vu2, [0, 45],this.sprite,[95, -20] ,maxForce);
+	constraint2.collideConnected = false;
+	constraint2.setLimits(-1.2,-0.1);
+	constraint2.setStiffness(500000);
+	var constraint3 = this.game.physics.p2.createRevoluteConstraint(this.vu1,[0, -45], this.vu3, [0, 50],maxForce);
+	constraint3.collideConnected = false;
+	constraint3.setLimits(1.7,2.5);
+	constraint3.setStiffness(500000);
+	constraint3.setRelaxation(1);
+	var constraint4 = this.game.physics.p2.createRevoluteConstraint(this.vu2,[0, -45], this.vu4, [0, 50],maxForce);
+	constraint4.collideConnected = false;
+	constraint4.setLimits(-2.5,-1.7);
+	constraint4.setStiffness(500000);
+	constraint4.setRelaxation(1);
+	var constraint5 = this.game.physics.p2.createRevoluteConstraint(this.vu3,[0, -45], this.vu5, [0, 17],maxForce);
+	constraint5.collideConnected = false;
+	constraint5.setLimits(-0.1,0.1);
+	var constraint6 = this.game.physics.p2.createRevoluteConstraint(this.vu4,[0, -45], this.vu6, [0, 17],maxForce);
+	constraint6.collideConnected = false;
+	constraint6.setLimits(-0.1,0.1);
+	var constraint7 = this.game.physics.p2.createRevoluteConstraint(this.sprite,[0, 0], this.vu7, [0, 0],maxForce);
+	constraint7.collideConnected = false;
+	constraint7.setLimits(-0.1,0.1);
 		
-		//this.sprite.body.setSize(70, 70, 0, 0);
-		
-		//this.sprite.body.bounce.set(0.8);
-		//this.sprite.body.maxVelocity.set(160);
-		//this.sprite.body.drag.set(50);
+	this.game.camera.follow(this.sprite);                //oyuncuyu takip et
+	var edge = 200;
+	this.game.camera.deadzone = new Phaser.Rectangle(edge*2, edge, this.game.camera.width - (edge * 4), this.game.camera.height - (edge * 2));   
+
     },
  
     update: function() {
 		
 	  this.sprite.body.setZeroVelocity();
+	  this.sprite.body.setZeroRotation();
+	  this.vu1.body.setZeroRotation();
+	  this.vu2.body.setZeroRotation();
+	  this.vu3.body.setZeroRotation();
+	  this.vu4.body.setZeroRotation();
+	  this.vu5.body.setZeroRotation();
+	  this.vu6.body.setZeroRotation();
 
 		if (this.cursors.up.isDown)
 		{
-			this.sprite.body.moveUp(300)
+			this.sprite.body.moveForward(250);
 		}
 		else if (this.cursors.down.isDown)
 		{
-			this.sprite.body.moveDown(300);
+			this.sprite.body.moveBackward(250);
 		}
 
 		if (this.cursors.left.isDown)
 		{
-			this.sprite.body.velocity.x = -300;
+			this.sprite.body.rotateLeft(50);
 		}
 		else if (this.cursors.right.isDown)
 		{
-			this.sprite.body.moveRight(300);
+			this.sprite.body.rotateRight(50);
+		}
+		
+		if (this.cursors.lp.isDown)
+		{
+			this.leftPunch(500000);  //sol at yumruk güç değeri
+		}
+		else if (this.cursors.rp.isDown)
+		{
+			this.rightPunch(500000);   //sağ at yumruk güç değeri
+		}
+		else{
+			this.leftGuard(2000);
+			this.rightGuard(2000);
 		}
 
     },
+	leftPunch: function(punchForce) {  //sol yumruk atma fonksiyonu
+		this.vu5.body.force.x = Math.cos(this.sprite.body.rotation-this.game.math.degToRad(60)) * punchForce;
+		this.vu5.body.force.y = Math.sin(this.sprite.body.rotation-this.game.math.degToRad(60)) * punchForce;
+	},    
+	rightPunch: function(punchForce) {  //sağ yumruk atma fonksiyonu
+		this.vu6.body.force.x = Math.cos(this.sprite.body.rotation-this.game.math.degToRad(120)) * punchForce; 
+		this.vu6.body.force.y = Math.sin(this.sprite.body.rotation-this.game.math.degToRad(120)) * punchForce;
+	},   
+	leftGuard: function(punchForce) {  //sol gard fonksiyonu
+		this.vu5.body.force.x = Math.cos(this.sprite.body.rotation+this.game.math.degToRad(60)) * punchForce;
+		this.vu5.body.force.y = Math.sin(this.sprite.body.rotation+this.game.math.degToRad(60)) * punchForce;
+	},    
+	rightGuard: function(punchForce) {  //sağ gard fonksiyonu
+		this.vu6.body.force.x = Math.cos(this.sprite.body.rotation+this.game.math.degToRad(120)) * punchForce; 
+		this.vu6.body.force.y = Math.sin(this.sprite.body.rotation+this.game.math.degToRad(120)) * punchForce;
+	}    
+	
 	
 };
 
@@ -155,8 +245,11 @@ BasicGame.Preloader.prototype = {
 
 		this.game.load.image('background','assets/arena.png');
 
-			BasicGame.boxer1 = new Boxer(this,1,300,300);
+			BasicGame.boxer1 = new Boxer(this,1,400,400);
 			BasicGame.boxer1.preload();
+			
+			BasicGame.boxer2 = new Boxer(this,2,700,700);
+			BasicGame.boxer2.preload();
 			
 		//	+ lots of other required assets here
 		this.load.image('splash_image',"assets/start.png");
