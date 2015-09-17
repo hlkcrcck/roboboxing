@@ -1,11 +1,15 @@
 BasicGame = {
 	stateText:null,
 	juicy:null,
-	boxer1:null,
 	shield:false,
     music: null,
 	orientated: false,
 	fullscreen: false,
+	boxersList:{},
+	boxer1:null,
+	myID:null,
+	ready:null,
+	eurecaServer:null,
 };
 
 BasicGame.toggleFullscreen = function() {

@@ -17,6 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
+<script src="/eureca.js"></script>
 
   <!-- Apple icons -->
   <link rel="apple-touch-icon" href="assets/ui/icons/apple-touch-icon.png">
@@ -42,7 +43,6 @@
 
   <!-- Load the Phaser library -->
   <script src="phaser.min.js"></script>
-  <script src="Juicy.js"></script>
 
   <!-- Styles the orientation prompt -->
   <link rel="stylesheet" href="css/stylesheet.css" type="text/css" charset="utf-8" />
@@ -73,8 +73,61 @@
   game.state.add('Game', BasicGame.Game);
 
   // Now start the Boot state.
-  game.state.start('Boot');
+  
+  
+  BasicGame.ready = false;
 
+//this function will handle client communication with the server
+var eurecaClientSetup = function() {
+	//create an instance of eureca.io client
+	var eurecaClient = new Eureca.Client();
+	
+	eurecaClient.ready(function (proxy) {		
+		BasicGame.eurecaServer = proxy;
+	});
+	
+	
+
+	eurecaClient.exports.setId = function(id) 
+	{
+		//create() is moved here to make sure nothing is created before uniq id assignation
+		game.state.start('Boot');
+		BasicGame.myId = id;
+		BasicGame.eurecaServer.handshake();
+		BasicGame.ready = true;
+	}	
+	
+	eurecaClient.exports.kill = function(id)
+	{	
+		if (BasicGame.boxersList[id]) {
+			BasicGame.boxersList[id].kill();
+			console.log('killing ', id, BasicGame.boxersList[id]);
+		}
+	}	
+	eurecaClient.exports.updateState = function(id, state)
+	{
+		if (BasicGame.boxersList[id])  {
+			BasicGame.boxersList[id].input = state;
+			BasicGame.boxersList[id].sprite.body.x = state.x;
+			BasicGame.boxersList[id].sprite.body.y = state.y;
+			BasicGame.boxersList[id].sprite.body.angle = state.angle;
+			BasicGame.boxersList[id].update();
+		}
+	}
+	eurecaClient.exports.spawnEnemy = function(i, x, y)
+	{
+		console.log('SPAWN');
+		if (i == BasicGame.myId) return; //this is me	
+		
+		var bxr = new Boxer(game,i,x,y);
+		BasicGame.boxersList[i] = bxr;
+		bxr.preload();
+		bxr.create();
+		
+	}
+}
+
+eurecaClientSetup();
 })();
 </script>
 

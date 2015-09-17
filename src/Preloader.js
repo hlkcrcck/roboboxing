@@ -33,13 +33,26 @@ Boxer = function(game,p_number,startX,startY) {
 	this.scoreText='';
     this.game = game;
 	this.cursors = null;
+	this.input = null;
 	this.p_number = p_number;
 	this.startX = startX;
 	this.startY = startY;
 	this.life = 100;
 };
 Boxer.prototype = {
- 
+     kill: function () {
+		this.sprite.kill();
+		this.vu1.kill();
+		this.vu2.kill();
+		this.vu3.kill();
+		this.vu4.kill();
+		this.vu5.kill();
+		this.vu6.kill();
+		this.vu7.kill();		
+		
+		
+    },
+	
     preload: function () {
 		this.game.load.image('player_body','assets/boxer/body.png');
 		this.game.load.image('player_top_left','assets/boxer/toparm.png');
@@ -53,22 +66,20 @@ Boxer.prototype = {
  
     create: function () {
 			
-		if(this.p_number==1)
-			{this.cursors = this.game.input.keyboard.createCursorKeys();
-			this.cursors.lp = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
-			this.cursors.rp = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
-			}
-		if(this.p_number==2)
+		if(this.p_number==BasicGame.myID)
 			{
-			this.cursors = {up: this.game.input.keyboard.addKey(Phaser.Keyboard.W),
-							down: this.game.input.keyboard.addKey(Phaser.Keyboard.S),
-							left: this.game.input.keyboard.addKey(Phaser.Keyboard.A),
-							right: this.game.input.keyboard.addKey(Phaser.Keyboard.D),
-							lp: this.game.input.keyboard.addKey(Phaser.Keyboard.Q),
-							rp: this.game.input.keyboard.addKey(Phaser.Keyboard.E)};				
+				this.cursors = this.game.input.keyboard.createCursorKeys();
+				this.cursors.lp = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+				this.cursors.rp = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
 			}
 
-			
+			this.input = {up: false,
+							down: false,
+							left: false,
+							right: false,
+							lp: false,
+							rp: false};
+
 
 			    //  Add 2 sprites which we'll join with a constraint
     this.sprite = this.game.add.sprite(this.startX, this.startY, 'player_body');
@@ -109,11 +120,11 @@ Boxer.prototype = {
     var constraint1 = this.game.physics.p2.createRevoluteConstraint(this.vu1, [0, 45],this.sprite,[-95, -20] ,maxForce);
 	constraint1.collideConnected = false;
 	constraint1.setLimits(0.1,1.2);
-	constraint1.setStiffness(500000);
+	constraint1.setStiffness(500);
 	var constraint2 = this.game.physics.p2.createRevoluteConstraint(this.vu2, [0, 45],this.sprite,[95, -20] ,maxForce);
 	constraint2.collideConnected = false;
 	constraint2.setLimits(-1.2,-0.1);
-	constraint2.setStiffness(500000);
+	constraint2.setStiffness(500);
 	var constraint3 = this.game.physics.p2.createRevoluteConstraint(this.vu1,[0, -45], this.vu3, [0, 50],maxForce);
 	constraint3.collideConnected = false;
 	constraint3.setLimits(1.7,2.5);
@@ -140,8 +151,22 @@ Boxer.prototype = {
 
     },
  
-    update: function() {
-		
+    update: function() {if(this.p_number==BasicGame.myID)
+				{if(this.cursors.down.isDown!=this.input.down||this.cursors.up.isDown!=this.input.up||this.cursors.right.isDown!=this.input.right||this.cursors.left.isDown!=this.input.left||this.cursors.lp.isDown!=this.input.lp||this.cursors.rp.isDown!=this.input.rp)
+{
+			this.input = {
+				up:this.cursors.up.isDown,
+				down:this.cursors.down.isDown,
+				left:this.cursors.left.isDown,
+				right:this.cursors.right.isDown,
+				lp:this.cursors.lp.isDown,
+				rp:this.cursors.rp.isDown,
+				x:this.sprite.body.x,
+				y:this.sprite.body.y,
+				angle:this.sprite.body.angle
+			};
+			BasicGame.eurecaServer.handleKeys(this.input);
+		}}
 	  this.sprite.body.setZeroVelocity();
 	  this.sprite.body.setZeroRotation();
 	  this.vu1.body.setZeroRotation();
@@ -150,30 +175,29 @@ Boxer.prototype = {
 	  this.vu4.body.setZeroRotation();
 	  this.vu5.body.setZeroRotation();
 	  this.vu6.body.setZeroRotation();
-
-		if (this.cursors.up.isDown)
+		if (this.input.up)
 		{
 			this.sprite.body.moveForward(250);
 		}
-		else if (this.cursors.down.isDown)
+		else if (this.input.down)
 		{
 			this.sprite.body.moveBackward(250);
 		}
 
-		if (this.cursors.left.isDown)
+		if (this.input.left)
 		{
 			this.sprite.body.rotateLeft(50);
 		}
-		else if (this.cursors.right.isDown)
+		else if (this.input.right)
 		{
 			this.sprite.body.rotateRight(50);
 		}
 		
-		if (this.cursors.lp.isDown)
+		if (this.input.lp)
 		{
 			this.leftPunch(500000);  //sol at yumruk güç değeri
 		}
-		else if (this.cursors.rp.isDown)
+		else if (this.input.rp)
 		{
 			this.rightPunch(500000);   //sağ at yumruk güç değeri
 		}
@@ -198,8 +222,10 @@ Boxer.prototype = {
 	rightGuard: function(punchForce) {  //sağ gard fonksiyonu
 		this.vu6.body.force.x = Math.cos(this.sprite.body.rotation+this.game.math.degToRad(120)) * punchForce; 
 		this.vu6.body.force.y = Math.sin(this.sprite.body.rotation+this.game.math.degToRad(120)) * punchForce;
-	}    
-	
+	},
+	headDamage: function(){
+		
+	}
 	
 };
 
@@ -245,11 +271,17 @@ BasicGame.Preloader.prototype = {
 
 		this.game.load.image('background','assets/arena.png');
 
-			BasicGame.boxer1 = new Boxer(this,1,400,400);
+			/*BasicGame.boxer1 = new Boxer(this,1,400,400);
 			BasicGame.boxer1.preload();
 			
 			BasicGame.boxer2 = new Boxer(this,2,700,700);
-			BasicGame.boxer2.preload();
+			BasicGame.boxer2.preload();*/
+			BasicGame.boxer1 = new Boxer(this,BasicGame.myID,400,400);
+			BasicGame.boxer1.preload();
+			
+			for (var i in BasicGame.boxersList){
+				BasicGame.boxersList[i].preload();
+			}
 			
 		//	+ lots of other required assets here
 		this.load.image('splash_image',"assets/start.png");

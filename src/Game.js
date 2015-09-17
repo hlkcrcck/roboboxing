@@ -32,14 +32,13 @@ BasicGame.Game = function (game) {
 BasicGame.Game.prototype = {
 
   create: function () {
-	
-	BasicGame.juicy = this.game.plugins.add(Phaser.Plugin.Juicy); //ekran sallama plugini
-	
+		
 	this.game.add.tileSprite(0, 0, 1400, 1000, 'background');
 	//this.game.world.setBounds(300, 100, 800, 800);                     
 	
 	this.game.physics.startSystem(Phaser.Physics.P2JS);  
-
+	//this.game.physics.p2.setImpactEvents(true);
+	
 	this.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;   //f e bastiğinda tam ekrana gec 
 	fullButton = this.game.input.keyboard.addKey(Phaser.Keyboard.F);		
 	fullButton.onDown.add(gofull, this);
@@ -57,11 +56,15 @@ BasicGame.Game.prototype = {
     BasicGame.stateText.visible = false;
 	
 	BasicGame.boxer1.create();
-	BasicGame.boxer2.create();
+	//BasicGame.boxer2.create();
 
 		//  The score
     BasicGame.boxer1.scoreString = 'Score : ';
     BasicGame.boxer1.scoreText = BasicGame.boxer1.game.add.text(10, 10, BasicGame.boxer1.scoreString + BasicGame.boxer1.score, { font: '34px Arial', fill: '#fff' });
+	
+	for (var i in BasicGame.boxersList){
+		BasicGame.boxersList[i].create();
+	}
 	
     var fullscreen =
       this.add.button(this.game.width-8, this.game.height-8,
@@ -84,9 +87,14 @@ BasicGame.Game.prototype = {
   },
 
   update: function () {
-
+	if (!BasicGame.ready) return;
+	
 		BasicGame.boxer1.update();
-		BasicGame.boxer2.update();
+		//BasicGame.boxer2.update();
+		
+		for (var i in BasicGame.boxersList){
+			BasicGame.boxersList[i].update();
+		}
 		
   },
   
